@@ -21,34 +21,6 @@ RUN wget -O /tmp/ruby-install-0.5.0.tar.gz https://github.com/postmodern/ruby-in
 cd /tmp/ && tar -xzvf ruby-install-0.5.0.tar.gz && cd /tmp/ruby-install-0.5.0 && make install && \
 cd && rm -rf /tmp/ruby-install-0.5.0/
 
-# Install latest version of Ruby and change to that version
-RUN ruby-install ruby "$(curl -sSL http://ruby.thoughtbot.com/latest)" -- --disable-install-rdoc
-RUN source /usr/local/share/chruby/chruby.sh
-RUN chruby "$(curl -sSL http://ruby.thoughtbot.com/latest)"
-
-# Update Rubygems and install gems
-RUN gem update --system && \
-gem install bundler --no-document --pre && \
-bundle config --global jobs $(($(nproc)-1)) && \
-gem install suspenders --no-document && \
-gem install parity --no-document
-
-# Install Heroku CLI client and configuration options
-RUN curl -s https://toolbelt.heroku.com/install-ubuntu.sh | sh && \
-heroku plugins:install git://github.com/ddollar/heroku-config.git
-
-# Install GitHub CLI client
-RUN curl https://github.com/jingweno/gh/releases/latest -s | cut -d'v' -f2 | cut -d'"' -f1 > /tmp/gh_version
-RUN curl "https://github.com/jingweno/gh/releases/download/v$(cat /tmp/gh_version)/gh_$(cat /tmp/gh_version)_amd64.deb" -sLo gh.deb
-RUN dpkg -i gh.deb
-
 # Install rcm
 RUN wget -O /tmp/rcm_1.2.3-1_all.deb https://thoughtbot.github.io/rcm/debs/rcm_1.2.3-1_all.deb && \
 dpkg -i /tmp/rcm_1.2.3-1_all.deb && rm -f /tmp/rcm_1.2.3-1_all.deb
-
-# Retrieve and install dotfiles
-WORKDIR /root
-RUN git clone git://github.com/thoughtbot/dotfiles.git
-RUN env RCRC=$HOME/dotfiles/rcrc rcup
-RUN cd && git clone git@github.com:kenyonj/dotfiles-local.git
-RUN cd && cd dotfiles-local && bin.local/setup
